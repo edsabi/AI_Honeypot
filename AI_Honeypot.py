@@ -11,7 +11,7 @@ with open('file.txt', 'r') as f:
 openai.api_key = open_ai_api_key.strip()
 
 app = Flask(__name__)
-app.secret_key = os.urandom(24)  # Set a secret key for session management
+
 
 # HTML template for the input form
 html_template = '''
