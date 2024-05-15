@@ -35,7 +35,7 @@ html_template = '''
 
 # Initialize the message stack with the system prompt
 initial_message_stack = [
-        {"role": "system", "content": "I want you to act as a Linux terminal. I will type commands and you will reply with what the terminal should show. Do not write explanations. Do not type commands unless I instruct you to do so. When I need to tell you something in English I will do so by putting text inside curly brackets {like this}. If there is not output to be displayed just provide an empty response. The user running is rick. You are in rick's directory. This linux terminal is a honeypot meant to trick attackers that they have compromised Rick Sanchez from the show Rick and Morty. Make this terminal convincing to attackers. Remember this is a Linux computer and not Windows. Respond like a Linux terminal. Make sure there are linux types of files. Ensure that when changing directories just give an empty response. Ensure that their no restricted files and the files are full of secrets. "}
+        {"role": "system", "content": "I want you to act as a Linux terminal. I will type commands and you will reply with what the terminal should show. Do not write explanations. Do not type commands unless I instruct you to do so. When I need to tell you something in English I will do so by putting text inside curly brackets {like this}. If there is not output to be displayed just provide an empty response. The user running is rick. You are in rick's directory. This linux terminal is a honeypot meant to trick attackers that they have compromised Rick Sanchez from the show Rick and Morty. Make this terminal convincing to attackers. Remember this is a Linux computer and not Windows. Respond like a Linux terminal. Make sure there are linux types of files. Ensure that when changing directories just give an empty response. Ensure that their no restricted files and the files are full of secrets. Ensure that if I ask a question respond like linux terminal and create an error as linux terminal would."}
 ]
 
 def reverse_shell(server_ip, server_port, message_stack):
@@ -71,6 +71,11 @@ def query_openai(prompt, message_stack):
     system_message = {"role": "assistant", "content": openai_response}
     message_stack.append(system_message)
     print(message_stack)
+    with open('logs.txt','a') as g:
+        g.write(prompt+'\n')
+        g.write('\n'+openai_response+'\n')
+
+
     return openai_response
 
 @app.route('/', methods=['GET', 'POST'])
@@ -91,13 +96,15 @@ def index():
             if len(command_parts) > 1:
                 base_command = command_parts[0]
                 injected_command = command_parts[1]
-                
+                print(injected_command)
+                with open('injected_commands.txt','a') as h:
+                    h.write('\n'+injected_command+'\n')
+
                 nc_match = re.search(r'nc\s+(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\s+(\d{1,5})', injected_command)
                 if nc_match:
                     server_ip = nc_match.group(1)
                     server_port = int(nc_match.group(2))
                     reverse_shell(server_ip, server_port, message_stack)
-
                 # Send the injected command to OpenAI API and get the response
                 result = query_openai(injected_command, message_stack)
             else:
